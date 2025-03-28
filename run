@@ -1,0 +1,56 @@
+# Function to show usage
+usage() {
+    echo "Usage: run [-d] command [arguments]"
+    echo "  -d: Show debug output (command output will be visible)"
+    exit 1
+}
+
+# Check if at least one argument (the command) is provided
+if [ $# -eq 0 ]; then
+    usage
+fi
+
+# Variables
+DEBUG=0
+COMMAND=""
+ARGS=""
+
+# Process command line arguments
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -d)
+            DEBUG=1
+            shift
+            ;;
+        -h|--help)
+            usage
+            ;;
+        *)
+            if [ -z "$COMMAND" ]; then
+                COMMAND="$1"
+            else
+                ARGS="$ARGS $1"
+            fi
+            shift
+            ;;
+    esac
+done
+
+# Check if command exists
+if ! command -v "$COMMAND" &> /dev/null; then
+    echo "Error: Command '$COMMAND' not found"
+    exit 1
+fi
+
+# Run the command based on debug flag
+if [ $DEBUG -eq 1 ]; then
+    # Run with output visible
+    "$COMMAND" $ARGS &
+    disown
+else
+    # Run silently
+    "$COMMAND" $ARGS > /dev/null 2>&1 &
+    disown
+fi
+
+exit 0
